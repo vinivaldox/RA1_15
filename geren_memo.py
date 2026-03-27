@@ -2,7 +2,14 @@
 tokens = ["(", "3.14", "2.0", "+", ")"]
 tokens2 = ["(", "11.8", "2,0", "%", ")"]
 tokens3 =["(", "(", "1", "2", "+", ")", "3", "/", ")"]
-tokenfalho = ["1", "2", "+", ")"]
+
+tokenfalho = ["1", "2", "+", ")"] #teste faltando parentesis
+tokenfalho2 = ["(", "1", "+", ")"]#teste faltando operando (2 elementos)
+tokenfalho3 = ["(", "1", "2", "3", "+", ")"]#teste com elementos demais
+tokenfalho4 = ["(", "1", "2", "&", ")"] #teste operador invalido
+tokenfalho5 = ["(", "+", "1", "2", ")"] #ordem errada <- *********** ainda precisa validar os op1, op2, op***********
+
+
 
 #pega os token e adiciona numa pilha até encontrar ")", que significa que a operação acabou, então desempilha em uma lista até achar o "("
 #que significa que chegou no início da expressão
@@ -19,8 +26,8 @@ def executarExpressao(tokens):
             while pilha and pilha[-1] != "(":
                 elementos.append(pilha.pop())
 
-            if not pilha:                                   #validação de lista vazia
-                print("ERRO...")
+            if not pilha:                                   #validação de lista vazia provavelmente erro no ()
+                print("ERRO...parêntesis")
                 return None
 
             pilha.pop()  #remove 1 "("
@@ -47,10 +54,10 @@ def executarExpressao(tokens):
 
             pilha.append(subexpressao) #monta a subexpressão
                 
-        if len(pilha) != 1:
-            print("ERRO...")
-            return None
+    if len(pilha) != 1:
+        print("ERRO... má formataçao")
+        return None
 
     return pilha[0]
 
-print(executarExpressao(tokens))
+print(executarExpressao(tokens2))
