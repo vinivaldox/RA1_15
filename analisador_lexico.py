@@ -11,8 +11,18 @@ from dataclasses import dataclass
 class Token:
     """Classe que representa os atributos de um token"""
 
-    tipo: str  # "NUMERO", "OPERADOR", "PARENTESE", "COMANDO"
+    tipo: str  # "NUMERO", "OPERADOR", "PARENTESE", "COMANDO", "VARIAVEL"
     valor: str  # O valor real do token. Exemplo, "3", "+", "(", "MEM"
+
+    def to_dict(self) -> dict:
+        """Converte o Token para um dicionário.
+
+        Returns
+        -------
+        dict
+            Dicionário com as chaves 'tipo' e 'valor'
+        """
+        return {"tipo": self.tipo, "valor": self.valor}
 
 
 def estado_inicial(caractere: str, contexto: dict) -> str:
@@ -257,17 +267,18 @@ def ler_arquivo(nome_arquivo: str) -> list:
 
 
 if __name__ == "__main__":
-    nome_arquivo = "teste_1.txt"
-    linhas = ler_arquivo(nome_arquivo)
+    nome_in = "teste_1.txt"
+    nome_out = "token.txt"
+    linhas = ler_arquivo(nome_in)
 
-    for i, linha in enumerate(linhas, 1):
-        print(f"\n{'=' * 60}")
-        print(f"Linha {i}: {linha}")
-        print(f"{'=' * 60}")
-        try:
-            tokens = parse_expressao(linha)
-            print(tokens)
-            for token in tokens:
-                print(f"  {token}")
-        except Exception as e:
-            print(f"ERRO: {e}")
+    with open(nome_out, "w", encoding="utf-8") as arquivo_saida:
+        for i, linha in enumerate(linhas, 1):
+            print(f"Linha {i}: {linha}")
+            try:
+                tokens = parseExpressao(linha)
+                dict_out = [token.to_dict() for token in tokens]
+                # Escreve dict_out como uma linha no arquivo
+                arquivo_saida.write(str(dict_out) + "\n")
+            except Exception as e:
+                print(f"ERRO: {e}")
+                # arquivo_saida.write(f"ERRO: {e}\n")
