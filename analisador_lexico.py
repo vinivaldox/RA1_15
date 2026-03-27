@@ -15,6 +15,62 @@ class Token:
     valor: str  # O valor real do token. Exemplo, "3", "+", "(", "MEM"
 
 
+def estado_inicial(caractere: str, contexto: dict) -> str:
+    # TODO: Adicionar docstr para estado_inicial
+
+    # paretneses, tem retorno imediato
+    if caractere == "(":
+        contexto["tokens"].append(Token("PARENTESE", "("))
+        return "inicial"
+    elif caractere == ")":
+        contexto["tokens"].append(Token("PARENTESE", ")"))
+        return "inicial"
+
+    # ignora espaços e tabs
+    elif caractere in " \t":
+        return "inicial"
+
+    # digitos de um numero
+    elif caractere.isdigit():
+        contexto["buffer"] = caractere
+        return "numero"
+
+    # letras para um comando ou variavel
+    elif caractere.isalpha():
+        contexto["buffer"] = caractere
+        return "letra"
+
+    # operadores simples, tem retorno imediato
+    elif caractere == "+":
+        contexto["tokens"].append(Token("OPERADOR", "+"))
+        return "inicial"
+    elif caractere == "*":
+        contexto["tokens"].append(Token("OPERADOR", "*"))
+        return "inicial"
+    elif caractere == "%":
+        contexto["tokens"].append(Token("OPERADOR", "%"))
+        return "inicial"
+    elif caractere == "^":
+        contexto["tokens"].append(Token("OPERADOR", "^"))
+        return "inicial"
+
+    # TODO: Ver se tem numero negativo nessa atividade
+    # verificar se o "-" é um operador de subtração ou um sinal de número negativo
+    elif caractere == "-":
+        contexto["buffer"] = "-"
+        return "valida_menos"
+
+    # operador complexo, podendo ser "/" ou "//", então precisa de um estado de validação
+    elif caractere == "/":
+        contexto["buffer"] = "/"
+        return "valida_divisao"
+
+    # entrada invalida
+    else:
+        msg = f"Caractere inválido: '{caractere}'"
+        raise ValueError(msg)
+
+
 def ler_arquivo(nome_arquivo: str) -> list:
     """Abre arquivo.txt e retorna uma lista com as linhas contidas dentro do arquivo aberto.
 
@@ -30,7 +86,8 @@ def ler_arquivo(nome_arquivo: str) -> list:
     """
 
     if not nome_arquivo.endswith(".txt"):
-        raise ValueError("O nome do arquivo deve conter a extensão .txt")
+        msg = f"O nome do arquivo '{nome_arquivo}' é inválido. O nome do arquivo deve conter a extensão .txt"
+        raise ValueError(msg)
 
     with open(nome_arquivo, "r", encoding="utf-8") as f:
         linhas = [linha.strip() for linha in f.readlines() if linha.strip()]
