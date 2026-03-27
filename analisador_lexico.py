@@ -4,6 +4,15 @@
 # Vitor Matias Percegona Bilbao | TODO: inserir usuario/apelido do github aqui
 
 # Grupo: RA1 15
+from dataclasses import dataclass
+
+
+@dataclass
+class Token:
+    """Classe que representa os atributos de um token"""
+
+    tipo: str  # "NUMERO", "OPERADOR", "PARENTESE", "COMANDO"
+    valor: str  # O valor real do token. Exemplo, "3", "+", "(", "MEM"
 
 
 def ler_arquivo(nome_arquivo: str) -> list:
