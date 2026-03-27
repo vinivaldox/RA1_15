@@ -70,62 +70,79 @@ def estado_inicial(caractere: str, contexto: dict) -> str:
         msg = f"Caractere inválido: '{caractere}'"
         raise ValueError(msg)
 
+
 def estado_numero(caractere: str, contexto: dict) -> str:
-    """
-    Estado numero - acumula dígitos e décimais (inteiros ou decimais).
-    Valida para evitar múltiplos pontos.
-    
-    Args:
-        caractere: caractere sendo lido
-        contexto: dict com 'tokens' (list), 'buffer' (str)
-    
-    Returns:
-        Próximo estado como string
-    """
-    
     # continua acumulando dígitos
     if caractere.isdigit():
         contexto["buffer"] += caractere
         return "numero"
-    
-    # encontrou ponto decimal - valida se já tem um
+
+    # encontrou ponto decimal - valida se já tem um ponto
     elif caractere == ".":
         if "." in contexto["buffer"]:
             msg = f"Número malformado: dois pontos - '{contexto['buffer']}'"
             raise ValueError(msg)
         contexto["buffer"] += caractere
         return "numero"
-    
+
     # espaço - termina o número
     elif caractere in " \t":
         contexto["tokens"].append(Token("NUMERO", contexto["buffer"]))
         contexto["buffer"] = ""
         return "inicial"
-    
+
     # parêntese - termina número e processa parêntese
     elif caractere in "()":
         contexto["tokens"].append(Token("NUMERO", contexto["buffer"]))
         contexto["buffer"] = ""
         return estado_inicial(caractere, contexto)
-    
+
     # operador - termina número e processa operador
-    elif caractere in "+-*/%^":
+    elif caractere in "+*/%^":
         contexto["tokens"].append(Token("NUMERO", contexto["buffer"]))
         contexto["buffer"] = ""
         return estado_inicial(caractere, contexto)
-    
+
+    elif caractere == "-":
+        contexto["tokens"].append(Token("NUMERO", contexto["buffer"]))
+        contexto["buffer"] = ""
+        return estado_valida_menos(caractere, contexto)
+
     # "/" - precisa validar se é "/" ou "//"
     elif caractere == "/":
         contexto["tokens"].append(Token("NUMERO", contexto["buffer"]))
         contexto["buffer"] = "/"
         return "valida_divisao"
-    
+
     # inválido
     else:
         msg = f"Caractere inválido em número: '{contexto['buffer']}{caractere}'"
         raise ValueError(msg)
 
-    
+
+def estado_valida_menos(caractere: str, contexto: dict) -> str:
+    # "-" DIRETO em dígito = número negativo
+    if caractere.isdigit():
+        contexto["buffer"] += caractere  # "-" + dígito
+        return "numero"
+
+    elif caractere in " \t":
+        contexto["tokens"].append(Token("OPERADOR", "-"))
+        contexto["buffer"] = ""
+        return "inicial"  # Volta e ignora o espaço
+
+    # "-" SEGUIDO de parêntese = é operador
+    elif caractere in "()":
+        contexto["tokens"].append(Token("OPERADOR", "-"))
+        contexto["buffer"] = "-"
+        return estado_inicial(caractere, contexto)
+
+    # TODO: inserir validação de ponto aqui para numeros como -.8 ??
+    else:
+        msg = f"Caractere inválido após '-': '{caractere}'"
+        raise ValueError(msg)
+
+
 def ler_arquivo(nome_arquivo: str) -> list:
     """Abre arquivo.txt e retorna uma lista com as linhas contidas dentro do arquivo aberto.
 
