@@ -143,6 +143,21 @@ def estado_valida_menos(caractere: str, contexto: dict) -> str:
         raise ValueError(msg)
 
 
+def estado_valida_divisao(caractere: str, contexto: dict) -> str:
+    if caractere in "/":
+        contexto["tokens"].append(Token("OPERADOR", "//"))
+        contexto["buffer"] = ""
+        return "inicial"
+
+    else:
+        contexto["tokens"].append(Token("OPERADOR", "/"))
+        contexto["buffer"] = ""
+        if caractere in " \t":
+            return "inicial"
+        else:
+            return estado_inicial(caractere, contexto)
+
+
 def ler_arquivo(nome_arquivo: str) -> list:
     """Abre arquivo.txt e retorna uma lista com as linhas contidas dentro do arquivo aberto.
 
