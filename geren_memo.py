@@ -89,7 +89,7 @@ def executarExpressao(tokens, memoria, resultados):
 
 
 print(executarExpressao(tokens, {}, []))
-print(executarExpressao(tokens2, {}, []))
+print(executarExpressao(tokens3, {}, []))
 print(executarExpressao(tokensRES, {}, []))
 print(executarExpressao(tokensMEM, {}, []))
 print(executarExpressao(tokensdefMEM, {}, []))
