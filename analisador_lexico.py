@@ -95,7 +95,7 @@ def estado_numero(caractere: str, contexto: dict) -> str:
     elif caractere in "()":
         contexto["tokens"].append(Token("NUMERO", contexto["buffer"]))
         contexto["buffer"] = ""
-        return "inicial"
+        return estado_inicial(caractere, contexto)
 
     # operador - termina número e processa operador
     elif caractere in "+*/%^":
@@ -152,10 +152,7 @@ def estado_valida_divisao(caractere: str, contexto: dict) -> str:
     else:
         contexto["tokens"].append(Token("OPERADOR", "/"))
         contexto["buffer"] = ""
-        if caractere in " \t":
-            return "inicial"
-        else:
-            return "inicial"
+        return estado_inicial(caractere, contexto)
 
 
 def estado_letra(caractere: str, contexto: dict) -> str:
@@ -164,30 +161,42 @@ def estado_letra(caractere: str, contexto: dict) -> str:
         return "letra"
 
     elif caractere in " \t":
-        contexto["tokens"].append(Token("COMANDO", contexto["buffer"]))
-        contexto["buffer"] = ""
+        _criar_token_comando_ou_variavel(contexto)
         return "inicial"
 
     elif caractere in "()+-*/%^":
-        contexto["tokens"].append(Token("COMANDO", contexto["buffer"]))
-        contexto["buffer"] = ""
-        return "inicial"
+        _criar_token_comando_ou_variavel(contexto)
+        return estado_inicial(caractere, contexto)
 
     # "/" precisa validar se é "//"
     elif caractere == "/":
-        contexto["tokens"].append(Token("COMANDO", contexto["buffer"]))
+        _criar_token_comando_ou_variavel(contexto)
         contexto["buffer"] = "/"
         return "valida_divisao"
 
     # "-" precisa validar se é número negativo ou operador
     elif caractere == "-":
-        contexto["tokens"].append(Token("COMANDO", contexto["buffer"]))
+        _criar_token_comando_ou_variavel(contexto)
         contexto["buffer"] = ""
         return "valida_menos"
 
     else:
         msg = f"Caractere inválido em comando: '{contexto['buffer']}{caractere}'"
         raise ValueError(msg)
+
+
+def _criar_token_comando_ou_variavel(contexto: dict):
+    if not contexto["buffer"]:
+        return
+
+    comandos = {"MEM", "RES"}
+
+    if contexto["buffer"].upper() in comandos:
+        contexto["tokens"].append(Token("COMANDO", contexto["buffer"]))
+    else:
+        contexto["tokens"].append(Token("VARIAVEL", contexto["buffer"]))
+
+    contexto["buffer"] = ""
 
 
 def ler_arquivo(nome_arquivo: str) -> list:
@@ -216,5 +225,11 @@ def ler_arquivo(nome_arquivo: str) -> list:
 if __name__ == "__main__":
     nome_arquivo = "teste_1.txt"
     linhas = ler_arquivo(nome_arquivo)
-    for linha in linhas:
-        print(linha)
+    for i, linha in enumerate(linhas, 1):
+        print(f"\n--- Linha {i}: {linha}")
+        try:
+            tokens = parse_expressao(linha)
+            for token in tokens:
+                print(f"  {token}")
+        except Exception as e:
+            print(f"  ❌ ERRO: {e}")
