@@ -9,24 +9,76 @@ from dataclasses import dataclass
 
 @dataclass
 class Token:
-    """Classe que representa os atributos de um token"""
+    """Representa um token reconhecido pelo analisador léxico.
+
+    Um token é a unidade mínima de significado sintático em uma expressão RPN.
+    Cada token possui um tipo (NUMERO, OPERADOR, etc.) e um valor específico.
+
+    Attributes
+    ----------
+    tipo : str
+        Tipo do token. Valores possíveis: 'NUMERO', 'OPERADOR', 'PARENTESIS',
+        'COMANDO', 'VARIAVEL'
+    valor : str
+        Valor literal do token. Exemplos: '3', '+', '(', 'MEM', 'A'
+
+    Examples
+    --------
+    >>> token = Token('NUMERO', '42')
+    >>> token.tipo
+    'NUMERO'
+    >>> token.valor
+    '42'
+    >>> token.to_dict()
+    {'tipo': 'NUMERO', 'valor': '42'}
+    """
 
     tipo: str  # "NUMERO", "OPERADOR", "PARENTESIS", "COMANDO", "VARIAVEL"
     valor: str  # O valor real do token. Exemplo, "3", "+", "(", "MEM"
 
     def to_dict(self) -> dict:
-        """Converte o Token para um dicionário.
+        """Converte o Token para formato dicionário.
+
+        Transforma o objeto Token em um dicionário Python com as mesmas
+        informações, útil para serialização ou passagem a outros módulos.
 
         Returns
         -------
         dict
-            Dicionário com as chaves 'tipo' e 'valor'
+            Dicionário com chaves 'tipo' e 'valor'
+
+        Examples
+        --------
+        >>> token = Token('NUMERO', '3.14')
+        >>> token.to_dict()
+        {'tipo': 'NUMERO', 'valor': '3.14'}
         """
         return {"tipo": self.tipo, "valor": self.valor}
 
 
 def estado_inicial(caractere: str, contexto: dict) -> str:
-    # TODO: Adicionar docstr para estado_inicial
+    """Estado inicial do DFA - reconhece primeiro caractere de cada token.
+
+    Processa parênteses, espaços, dígitos, letras e operadores simples.
+    Para operadores compostos (- e /), transiciona para estados de validação.
+
+    Parameters
+    ----------
+    caractere : str
+        Um caractere individual da entrada
+    contexto : dict
+        Dicionário com chaves: 'buffer' (acumulador), 'tokens' (lista de tokens gerados)
+
+    Returns
+    -------
+    str
+        Nome do próximo estado como string ('inicial', 'numero', 'letra', etc.)
+
+    Raises
+    ------
+    ValueError
+        Se o caractere é inválido (não reconhecido pelo DFA)
+    """
 
     # paretneses, tem retorno imediato
     if caractere == "(":
@@ -82,7 +134,28 @@ def estado_inicial(caractere: str, contexto: dict) -> str:
 
 
 def estado_numero(caractere: str, contexto: dict) -> str:
-    # continua acumulando dígitos
+    """Estado de acumulação de número - reconhece dígitos e decimais.
+
+    Acumula caracteres no buffer enquanto forem dígitos. Permite um único ponto
+    decimal. Termina quando encontra espaço, parêntese, operador ou fim de linha.
+
+    Parameters
+    ----------
+    caractere : str
+        Um caractere individual da entrada
+    contexto : dict
+        Dicionário com chaves: 'buffer' (número em construção), 'tokens' (tokens finalizados)
+
+    Returns
+    -------
+    str
+        Nome do próximo estado
+
+    Raises
+    ------
+    ValueError
+        Se há dois pontos decimais no número ou caractere inválido
+    """
     if caractere.isdigit():
         contexto["buffer"] += caractere
         return "numero"
@@ -131,7 +204,31 @@ def estado_numero(caractere: str, contexto: dict) -> str:
 
 
 def estado_valida_menos(caractere: str, contexto: dict) -> str:
-    # "-" DIRETO em dígito = número negativo
+    """Estado de validação do operator/sinal '-' em RPN.
+
+    Distingue se '-' é operador de subtração ou sinal de número negativo:
+    - Se seguido de dígito: número negativo (ex: -5)
+    - Se seguido de espaço/parêntese: operador de subtração
+
+    Nota: Em RPN, operadores vêm sempre após operandos. Se houver "-5", é número negativo.
+
+    Parameters
+    ----------
+    caractere : str
+        Próximo caractere após o '-'
+    contexto : dict
+        Dicionário com chaves: 'buffer' ('-'), 'tokens' (tokens finalizados)
+
+    Returns
+    -------
+    str
+        'numero' para número negativo, 'inicial' para operador
+
+    Raises
+    ------
+    ValueError
+        Se caractere após '-' é inválido
+    """
     if caractere.isdigit():
         contexto["buffer"] += caractere  # "-" + dígito
         return "numero"
@@ -154,7 +251,25 @@ def estado_valida_menos(caractere: str, contexto: dict) -> str:
 
 
 def estado_valida_divisao(caractere: str, contexto: dict) -> str:
-    if caractere in "/":
+    """Estado de validação do operador '/' vs '//' em RPN.
+
+    Distingue divisão simples (/) de divisão inteira (//):
+    - Se seguido de '/': operador // (divisão inteira)
+    - Se seguido de outro caractere: operador / (divisão real)
+
+    Parameters
+    ----------
+    caractere : str
+        Próximo caractere após o '/'
+    contexto : dict
+        Dicionário com chaves: 'buffer' ('/'), 'tokens' (tokens finalizados)
+
+    Returns
+    -------
+    str
+        'inicial' após emitir operador
+    """
+    if caractere == "/":
         contexto["tokens"].append(Token("OPERADOR", "//"))
         contexto["buffer"] = ""
         return "inicial"
@@ -166,6 +281,29 @@ def estado_valida_divisao(caractere: str, contexto: dict) -> str:
 
 
 def estado_letra(caractere: str, contexto: dict) -> str:
+    """Estado de acumulação de comando/variável - reconhece sequências de letras.
+
+    Acumula caracteres alfabéticos no buffer. Termina quando encontra espaço,
+    parêntese, operador ou fim de línea. Pode transicionar para validação de
+    '-' ou '/' para reprocessamento.
+
+    Parameters
+    ----------
+    caractere : str
+        Um caractere individual da entrada
+    contexto : dict
+        Dicionário com chaves: 'buffer' (letras acumuladas), 'tokens' (tokens finalizados)
+
+    Returns
+    -------
+    str
+        Nome do próximo estado
+
+    Raises
+    ------
+    ValueError
+        Se caractere após sequência de letras é inválido
+    """
     if caractere.isalpha():
         contexto["buffer"] += caractere
         return "letra"
@@ -196,6 +334,21 @@ def estado_letra(caractere: str, contexto: dict) -> str:
 
 
 def _criar_token_comando_ou_variavel(contexto: dict):
+    """Emite token de COMANDO ou VARIÁVEL conforme o buffer.
+
+    Verifica se o conteúdo do buffer é um comando conhecido (MEM, RES)
+    ou uma variável genérica. Limpa o buffer após emissão.
+
+    Parameters
+    ----------
+    contexto : dict
+        Dicionário com chaves: 'buffer' (nome em construção), 'tokens' (lista de tokens)
+
+    Returns
+    -------
+    None
+        Modifica o contexto adicionando token e limpando buffer
+    """
     if not contexto["buffer"]:
         return
 
@@ -210,7 +363,30 @@ def _criar_token_comando_ou_variavel(contexto: dict):
 
 
 def parseExpressao(linha: str) -> list:
-    # Inicia contexto vazio
+    """Processa uma linha completa através do DFA (Autômato Finito Determinístico).
+
+    Orquestrador principal que itembra cada caractere da entrada, mantendo estado
+    atual e contexto, até tokenizar completamente a linha de expressão RPN.
+    Emite qualquer token pendente no buffer ao final.
+
+    Parameters
+    ----------
+    linha : str
+        Uma linha de expressão RPN a ser tokenizada
+
+    Returns
+    -------
+    list
+        Lista de objetos Token reconhecidos na expressão
+
+    Examples
+    --------
+    >>> tokens = parseExpressao("( 5 A MEM )")
+    >>> len(tokens)
+    5
+    >>> tokens[0].tipo
+    'PARENTESIS'
+    """
     contexto = {"buffer": "", "tokens": []}
     estado_atual = "inicial"
 
@@ -244,17 +420,35 @@ def parseExpressao(linha: str) -> list:
 
 
 def ler_arquivo(nome_arquivo: str) -> list:
-    """Abre arquivo.txt e retorna uma lista com as linhas contidas dentro do arquivo aberto.
+    """Abre arquivo .txt e retorna lista de linhas não-vazias.
+
+    Lê todas as linhas de um arquivo de texto, remove espaços em branco
+    das pontas e filtra linhas vazias.
 
     Parameters
     ----------
     nome_arquivo : str
-        Nome do arquivo a ser aberto, deve conter a extensão .txt
+        Nome do arquivo a ser lido. Deve ter extensão .txt
 
     Returns
     -------
     list
-        Lista com as linhas contidas dentro do arquivo aberto
+        Lista de strings representando as linhas do arquivo, sem espaços das pontas
+
+    Raises
+    ------
+    ValueError
+        Se o arquivo não possui extensão .txt
+    FileNotFoundError
+        Se o arquivo não existe
+
+    Examples
+    --------
+    >>> linhas = ler_arquivo('teste_1.txt')
+    >>> len(linhas)
+    10
+    >>> linhas[0]
+    '( 5 A MEM )'
     """
 
     if not nome_arquivo.endswith(".txt"):
