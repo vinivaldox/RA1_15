@@ -11,7 +11,7 @@ from dataclasses import dataclass
 class Token:
     """Classe que representa os atributos de um token"""
 
-    tipo: str  # "NUMERO", "OPERADOR", "PARENTESE", "COMANDO", "VARIAVEL"
+    tipo: str  # "NUMERO", "OPERADOR", "PARENTESIS", "COMANDO", "VARIAVEL"
     valor: str  # O valor real do token. Exemplo, "3", "+", "(", "MEM"
 
     def to_dict(self) -> dict:
@@ -30,10 +30,10 @@ def estado_inicial(caractere: str, contexto: dict) -> str:
 
     # paretneses, tem retorno imediato
     if caractere == "(":
-        contexto["tokens"].append(Token("PARENTESE", "("))
+        contexto["tokens"].append(Token("PARENTESIS", "("))
         return "inicial"
     elif caractere == ")":
-        contexto["tokens"].append(Token("PARENTESE", ")"))
+        contexto["tokens"].append(Token("PARENTESIS", ")"))
         return "inicial"
 
     # ignora espaços e tabs
