@@ -1,5 +1,5 @@
 '''
-Vou explicar como essa função da funfando, pega  braba:
+Vou explicar como essa função da funfando, pega a braba:
 Temos um try catch para tratar o erro de nome de arquivo (como o prof quer)
 usando o with open com 'r' garante que eu estou apenas lendop
 o linha.strip serve para tirar os enters e limpar a lista de linhas
