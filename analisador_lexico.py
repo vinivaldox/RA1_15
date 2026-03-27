@@ -7,6 +7,22 @@
 
 
 def ler_arquivo(nome_arquivo: str) -> list:
+    """Abre arquivo.txt e retorna uma lista com as linhas contidas dentro do arquivo aberto.
+
+    Parameters
+    ----------
+    nome_arquivo : str
+        Nome do arquivo a ser aberto, deve conter a extensão .txt
+
+    Returns
+    -------
+    list
+        Lista com as linhas contidas dentro do arquivo aberto
+    """
+
+    if not nome_arquivo.endswith(".txt"):
+        raise ValueError("O nome do arquivo deve conter a extensão .txt")
+
     with open(nome_arquivo, "r", encoding="utf-8") as f:
         linhas = [linha.strip() for linha in f.readlines() if linha.strip()]
     return linhas
