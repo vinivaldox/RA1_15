@@ -225,11 +225,5 @@ def ler_arquivo(nome_arquivo: str) -> list:
 if __name__ == "__main__":
     nome_arquivo = "teste_1.txt"
     linhas = ler_arquivo(nome_arquivo)
-    for i, linha in enumerate(linhas, 1):
-        print(f"\n--- Linha {i}: {linha}")
-        try:
-            tokens = parse_expressao(linha)
-            for token in tokens:
-                print(f"  {token}")
-        except Exception as e:
-            print(f"  ❌ ERRO: {e}")
+    for linha in linhas:
+        print(linha)
