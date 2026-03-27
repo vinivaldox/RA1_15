@@ -95,18 +95,18 @@ def estado_numero(caractere: str, contexto: dict) -> str:
     elif caractere in "()":
         contexto["tokens"].append(Token("NUMERO", contexto["buffer"]))
         contexto["buffer"] = ""
-        return estado_inicial(caractere, contexto)
+        return "inicial"
 
     # operador - termina número e processa operador
     elif caractere in "+*/%^":
         contexto["tokens"].append(Token("NUMERO", contexto["buffer"]))
         contexto["buffer"] = ""
-        return estado_inicial(caractere, contexto)
+        return "inicial"
 
     elif caractere == "-":
         contexto["tokens"].append(Token("NUMERO", contexto["buffer"]))
         contexto["buffer"] = ""
-        return estado_valida_menos(caractere, contexto)
+        return "valida_menos"
 
     # "/" - precisa validar se é "/" ou "//"
     elif caractere == "/":
@@ -135,7 +135,7 @@ def estado_valida_menos(caractere: str, contexto: dict) -> str:
     elif caractere in "()":
         contexto["tokens"].append(Token("OPERADOR", "-"))
         contexto["buffer"] = "-"
-        return estado_inicial(caractere, contexto)
+        return "inicial"
 
     # TODO: inserir validação de ponto aqui para numeros como -.8 ??
     else:
@@ -155,7 +155,39 @@ def estado_valida_divisao(caractere: str, contexto: dict) -> str:
         if caractere in " \t":
             return "inicial"
         else:
-            return estado_inicial(caractere, contexto)
+            return "inicial"
+
+
+def estado_letra(caractere: str, contexto: dict) -> str:
+    if caractere.isalpha():
+        contexto["buffer"] += caractere
+        return "letra"
+
+    elif caractere in " \t":
+        contexto["tokens"].append(Token("COMANDO", contexto["buffer"]))
+        contexto["buffer"] = ""
+        return "inicial"
+
+    elif caractere in "()+-*/%^":
+        contexto["tokens"].append(Token("COMANDO", contexto["buffer"]))
+        contexto["buffer"] = ""
+        return "inicial"
+
+    # "/" precisa validar se é "//"
+    elif caractere == "/":
+        contexto["tokens"].append(Token("COMANDO", contexto["buffer"]))
+        contexto["buffer"] = "/"
+        return "valida_divisao"
+
+    # "-" precisa validar se é número negativo ou operador
+    elif caractere == "-":
+        contexto["tokens"].append(Token("COMANDO", contexto["buffer"]))
+        contexto["buffer"] = ""
+        return "valida_menos"
+
+    else:
+        msg = f"Caractere inválido em comando: '{contexto['buffer']}{caractere}'"
+        raise ValueError(msg)
 
 
 def ler_arquivo(nome_arquivo: str) -> list:
