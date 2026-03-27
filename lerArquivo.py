@@ -1,6 +1,13 @@
+'''
+Vou explicar como essa função da funfando, pega  braba:
+Temos um try catch para tratar o erro de nome de arquivo (como o prof quer)
+
+'''
+
+
 def lerArquivo(nomeArquivo):
     try:
-        with open(nomeArquivo, 'teste_1.txt') as arquivo:
+        with open(nomeArquivo, 'r') as arquivo:
             #le sem aquebra de linha
             linhas = [linha.strip() for linha in arquivo.readlines()]
             print(f"Arquivo '{nomeArquivo}' lido com sucesso!")
