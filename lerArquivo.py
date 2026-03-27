@@ -1,7 +1,8 @@
 '''
 Vou explicar como essa função da funfando, pega  braba:
 Temos um try catch para tratar o erro de nome de arquivo (como o prof quer)
-
+usando o with open com 'r' garante que eu estou apenas lendop
+o .strip serve para tirar os enters e limpar as linhas da lista
 '''
 
 
