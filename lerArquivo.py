@@ -1,7 +1,7 @@
 def lerArquivo(nomeArquivo):
     try:
         with open(nomeArquivo, 'teste_1.txt') as arquivo:
-            #le semquebra de linha
+            #le sem aquebra de linha
             linhas = [linha.strip() for linha in arquivo.readlines()]
             print(f"Arquivo '{nomeArquivo}' lido com sucesso!")
             return linhas
