@@ -95,7 +95,7 @@ def estado_numero(caractere: str, contexto: dict) -> str:
     elif caractere in "()":
         contexto["tokens"].append(Token("NUMERO", contexto["buffer"]))
         contexto["buffer"] = ""
-        return estado_inicial(caractere, contexto)
+        return "inicial"
 
     # operador - termina número e processa operador
     elif caractere in "+*/%^":
@@ -199,6 +199,40 @@ def _criar_token_comando_ou_variavel(contexto: dict):
     contexto["buffer"] = ""
 
 
+def parseExpressao(linha: str) -> list:
+    # Inicia contexto vazio
+    contexto = {"buffer": "", "tokens": []}
+    estado_atual = "inicial"
+
+    # Mapeia nome do estado para sua função
+    estados = {
+        "inicial": estado_inicial,
+        "numero": estado_numero,
+        "letra": estado_letra,
+        "valida_menos": estado_valida_menos,
+        "valida_divisao": estado_valida_divisao,
+    }
+
+    # Processa cada caractere da linha
+    for caractere in linha:
+        # Pega a função do estado atual
+        funcao_estado = estados[estado_atual]
+        # Chama a função e recebe o próximo estado (como string)
+        estado_atual = funcao_estado(caractere, contexto)
+
+    # Ao final da linha, emite token pendente no buffer (se houver)
+    if contexto["buffer"]:
+        # Verifica se é número ou comando/variável
+        if contexto["buffer"][0].isdigit() or (
+            contexto["buffer"][0] == "-" and len(contexto["buffer"]) > 1
+        ):
+            contexto["tokens"].append(Token("NUMERO", contexto["buffer"]))
+        else:
+            _criar_token_comando_ou_variavel(contexto)
+
+    return contexto["tokens"]
+
+
 def ler_arquivo(nome_arquivo: str) -> list:
     """Abre arquivo.txt e retorna uma lista com as linhas contidas dentro do arquivo aberto.
 
@@ -225,5 +259,15 @@ def ler_arquivo(nome_arquivo: str) -> list:
 if __name__ == "__main__":
     nome_arquivo = "teste_1.txt"
     linhas = ler_arquivo(nome_arquivo)
-    for linha in linhas:
-        print(linha)
+
+    for i, linha in enumerate(linhas, 1):
+        print(f"\n{'=' * 60}")
+        print(f"Linha {i}: {linha}")
+        print(f"{'=' * 60}")
+        try:
+            tokens = parse_expressao(linha)
+            print(tokens)
+            for token in tokens:
+                print(f"  {token}")
+        except Exception as e:
+            print(f"ERRO: {e}")
