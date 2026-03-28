@@ -18,7 +18,7 @@ def exibirResultados(resultados: list) -> None:
     Parameters
     ----------
     resultados : list
-        Lista de resultados (float)
+        Lista de resultados (dict ou float)
     """
     print("\n" + "=" * 70)
     print("RESULTADOS DAS EXPRESSOES")
@@ -26,7 +26,16 @@ def exibirResultados(resultados: list) -> None:
 
     for i, resultado in enumerate(resultados, 1):
         if resultado is not None:
-            print(f"Linha {i}: {resultado:.1f}")
+            # Se for dict, mostra o tipo
+            if isinstance(resultado, dict):
+                tipo = resultado.get("tipo", "desconhecido")
+                print(f"Linha {i}: {tipo}")
+            else:
+                # Se for número, mostra com 1 casa decimal
+                try:
+                    print(f"Linha {i}: {float(resultado):.1f}")
+                except Exception:
+                    print(f"Linha {i}: {resultado}")
         else:
             print(f"Linha {i}: ERRO")
 
