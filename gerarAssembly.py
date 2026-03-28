@@ -18,11 +18,12 @@ def gerarAssembly(_tokens_):
     codigo_data += "    const_um: .double 1.0\n"
     
     #.text
-    codigo_text = "\n.text\n.global main\nmain:\n"
+    codigo_text = "\n.text\n.global _start\n_start:\n"
 
     variaveis_criadas = []
     contador_literais = 0
     contador_loops = 0  
+    ultima_variavel_vista = None 
 
     for token_dict in _tokens_:
         tipo = token_dict.get("tipo")
@@ -86,7 +87,7 @@ def gerarAssembly(_tokens_):
             contador_loops += 1
             
         #RES
-        elif tipo == "ESPECIAL" and valor == "RES":
+        elif tipo == "COMANDO" and valor == "RES":
             codigo_text += "    VPOP {d1}\n"
             codigo_text += "    VCVT.S32.F64 s1, d1\n"
             codigo_text += "    VMOV r1, s1\n"
@@ -95,9 +96,17 @@ def gerarAssembly(_tokens_):
             codigo_text += "    ADD r0, r0, r1\n"
             codigo_text += "    VLDR.F64 d0, [r0]\n"
             codigo_text += "    VPUSH {d0}\n"
+
+        #MEM
+        elif tipo == "COMANDO" and valor == "MEM":
+            codigo_text += "    VPOP {d1}\n"
+            codigo_text += "    VPOP {d0}\n"
+            codigo_text += f"    LDR r0, =var_{ultima_variavel_vista}\n"
+            codigo_text += "    VSTR.F64 d0, [r0]\n"
             
         #VAR
         elif tipo == "VARIAVEL":
+            ultima_variavel_vista = valor #guarda ultima
             if valor not in variaveis_criadas:
                 codigo_data += f"    var_{valor}: .double 0.0\n"
                 variaveis_criadas.append(valor)
@@ -120,61 +129,24 @@ def gerarAssembly(_tokens_):
 
 
 
-#------------
+#--------------
 #bloco de teste
-#------------
+#--------------
 if __name__ == "__main__":
-    #(3.0 2.0 +)
-    tokens1 = [
-        {"tipo": "PARENTESIS", "valor": "("},
-        {"tipo": "NUMERO",     "valor": "3.0"},
-        {"tipo": "NUMERO",     "valor": "2.0"},
-        {"tipo": "OPERADOR",   "valor": "+"},
-        {"tipo": "PARENTESIS", "valor": ")"}
-    ]
+    from lerArquivo import lerArquivo
+    nome_arquivo_entrada = "tokenteste.txt"
+    nome_do_arquivo_saida = "teste_completo.s"
     
-    #((1 2 +) 3 /)
-    tokens2 = [
-        {"tipo": "PARENTESIS", "valor": "("},
-        {"tipo": "PARENTESIS", "valor": "("},
-        {"tipo": "NUMERO",     "valor": "1"},
-        {"tipo": "NUMERO",     "valor": "2"},
-        {"tipo": "OPERADOR",   "valor": "+"},
-        {"tipo": "PARENTESIS", "valor": ")"},
-        {"tipo": "NUMERO",     "valor": "3"},
-        {"tipo": "OPERADOR",   "valor": "/"},
-        {"tipo": "PARENTESIS", "valor": ")"}
-    ]
-    
-    #alvar memória -> (10.5 CONTA)
-    tokens3 = [
-        {"tipo": "PARENTESIS", "valor": "("},
-        {"tipo": "NUMERO",     "valor": "10.5"},
-        {"tipo": "VARIAVEL",   "valor": "CONTA"},
-        {"tipo": "PARENTESIS", "valor": ")"}
-    ]
-    
-    #ler memória -> (CONTA)
-    tokens4 = [
-        {"tipo": "PARENTESIS", "valor": "("},
-        {"tipo": "VARIAVEL",   "valor": "CONTA"},
-        {"tipo": "PARENTESIS", "valor": ")"}
-    ]
-    
-    #histórico -> (2 RES)
-    tokens5 = [
-        {"tipo": "PARENTESIS", "valor": "("},
-        {"tipo": "NUMERO",     "valor": "2"},
-        {"tipo": "ESPECIAL",   "valor": "RES"},
-        {"tipo": "PARENTESIS", "valor": ")"}
-    ]
+    print("Iniciando o compilador...")
 
-    todos_os_tokens = tokens1 + tokens2 + tokens3 + tokens4 + tokens5
-
-    print("Gerando Assembly para todos os casos...")
-    resultado_assembly = gerarAssembly(todos_os_tokens)
-    nome_do_arquivo = "teste_completo.s"
-    with open(nome_do_arquivo, "w") as f:
-        f.write(resultado_assembly)
-        
-    print(f"sucesso! '{nome_do_arquivo}'.")
+    todos_os_tokens = lerArquivo(nome_arquivo_entrada)
+    
+    if todos_os_tokens:
+        print("Gerando código Assembly ARMv7...")
+        resultado_assembly = gerarAssembly(todos_os_tokens)
+        with open(nome_do_arquivo_saida, "w") as f:
+            f.write(resultado_assembly)
+            
+        print(f"Sucesso total! O código ARMv7 foi salvo no arquivo '{nome_do_arquivo_saida}'.")
+    else:
+        print("O compilador parou pois não encontrou tokens válidos.")
