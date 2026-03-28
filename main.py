@@ -90,6 +90,7 @@ def main():
 
         resultados = []
         todos_tokens_dicts = []
+        tokens_por_linha = []  # Armazena tokens de cada linha
         assembly_completo = ""
 
         # Processa cada linha
@@ -101,6 +102,7 @@ def main():
                 tokens_obj = parseExpressao(linha)
                 # Converte Token objects para dicts
                 tokens_dicts = [t.to_dict() for t in tokens_obj]
+                tokens_por_linha.append(tokens_dicts)  # Armazena para salvar depois
                 todos_tokens_dicts.extend(tokens_dicts)
 
                 print(f"Tokenização OK ({len(tokens_obj)} tokens)")
@@ -138,6 +140,15 @@ def main():
         # Salva Assembly
         if assembly_completo:
             salvarAssembly(assembly_completo, "saida.s")
+
+        # Salva tokens em arquivo
+        try:
+            with open("token.txt", "w", encoding="utf-8") as f:
+                for tokens_linha in tokens_por_linha:
+                    f.write(str(tokens_linha) + "\n")
+            print("Arquivo de tokens salvo: token.txt")
+        except Exception as e:
+            print(f"Erro ao salvar tokens: {e}")
 
         print("Compilação concluída!\n")
 
