@@ -108,7 +108,7 @@ def main():
                 print(f"Tokenização OK ({len(tokens_obj)} tokens)")
 
                 # ===== ALUNO 2: Execução =====
-                arvore = executarExpressao(tokens_dicts, memoria, historico)
+                arvore = executarExpressao(tokens_dicts)  # , memoria, historico)
                 valido, mensagem = validarToken(arvore, i, memoria, historico)
 
                 if valido:

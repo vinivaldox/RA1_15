@@ -44,7 +44,7 @@ memoria = {}
 historico = []
 
 
-def executarExpressao(tokens, memoria, historico):
+def executarExpressao(tokens):  # , memoria, historico):
     """
     Monta uma árvore de operações a partir dos tokens do Aluno 1
 
@@ -61,7 +61,11 @@ def executarExpressao(tokens, memoria, historico):
 
         # Número — empilha como float
         elif tipo == "NUMERO":
-            pilha.append(float(valor))
+            try:
+                pilha.append(float(valor))
+            except ValueError:
+                print(f"ERRO: Número inválido: '{valor}'")
+                return None
 
         # Operador
         elif tipo == "OPERADOR":
@@ -163,10 +167,11 @@ def validarToken(arvore, numero_token, memoria, historico):
         return False, f"Token {numero_token}: inválido"
 
 
-linhas = lerTokensDict("token.txt")
-for i, tokens in enumerate(linhas):
-    arvore = executarExpressao(tokens, memoria, historico)
-    valido, mensagem = validarToken(arvore, i + 1, memoria, historico)
-    print(mensagem)
-    if valido:
-        historico.append(arvore)
+if __name__ == "__main__":
+    linhas = lerTokensDict("token.txt")
+    for i, tokens in enumerate(linhas):
+        arvore = executarExpressao(tokens)  # , memoria, historico)
+        valido, mensagem = validarToken(arvore, i + 1, memoria, historico)
+        print(mensagem)
+        if valido:
+            historico.append(arvore)
