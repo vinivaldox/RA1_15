@@ -7,7 +7,9 @@
 # Aluno 4: Interface do Usuário e Integração Final
 
 import sys
-from analisador_lexico import parseExpressao, ler_arquivo
+from analisador_lexico import parseExpressao, ler_teste
+from gerarAssembly import gerarAssembly
+from geren_memo import executarExpressao, validarToken, memoria, historico
 
 
 def exibirResultados(resultados: list) -> None:
@@ -53,12 +55,12 @@ def main():
     """Função principal - Integra todos os alunos.
 
     Fluxo:
-    1. Lê arquivo (Aluno 3)
+    1. Lê arquivo (Aluno 1)
     2. Para cada linha:
        a. Tokeniza (Aluno 1)
        b. Executa (Aluno 2)
        c. Gera Assembly (Aluno 3)
-    3. Exibe e salva resultados
+    3. Exibe e salva resultados (Aluno 4)
     """
 
     if len(sys.argv) < 2:
@@ -73,11 +75,12 @@ def main():
     print(f"Arquivo: {nome_arquivo}\n")
 
     try:
-        # Lê arquivo
-        linhas = ler_arquivo(nome_arquivo)
+        # Lê arquivo (Aluno 1)
+        linhas = ler_teste(nome_arquivo)
         print(f"{len(linhas)} linhas lidas\n")
 
         resultados = []
+        todos_tokens_dicts = []
         assembly_completo = ""
 
         # Processa cada linha
@@ -85,31 +88,47 @@ def main():
             print(f"Linha {i}: {linha}")
 
             try:
-                # Aluno 1: Tokenização
-                tokens = parseExpressao(linha)
-                print(f"Tokenização OK ({len(tokens)} tokens)")
+                # ===== ALUNO 1: Tokenização =====
+                tokens_obj = parseExpressao(linha)
+                # Converte Token objects para dicts
+                tokens_dicts = [t.to_dict() for t in tokens_obj]
+                todos_tokens_dicts.extend(tokens_dicts)
 
-                # Aluno 2: Execução (assumindo que existe a função)
-                # resultado = executarExpressao(tokens)
-                # print(f"  ✓ Resultado: {resultado}")
-                # resultados.append(resultado)
+                print(f"Tokenização OK ({len(tokens_obj)} tokens)")
 
-                # Aluno 3: Geração Assembly (assumindo que existe a função)
-                # assembly = gerarAssembly(tokens)
-                # assembly_completo += assembly + "\n"
-                # print(f"  ✓ Assembly gerado\n")
+                # ===== ALUNO 2: Execução =====
+                arvore = executarExpressao(tokens_dicts, memoria, historico)
+                valido, mensagem = validarToken(arvore, i, memoria, historico)
+
+                if valido:
+                    resultados.append(arvore)
+                    if arvore:
+                        historico.append(arvore)
+                    print(f"{mensagem}")
+                else:
+                    print(f"{mensagem}")
+                    resultados.append(None)
 
             except Exception as e:
-                print(f"Erro: {e}\n")
+                print(f"Erro: {e}")
                 resultados.append(None)
 
+        # ===== ALUNO 3: Geração Assembly =====
+        try:
+            if todos_tokens_dicts:
+                assembly_completo = gerarAssembly(todos_tokens_dicts)
+                print("\n Assembly gerado")
+        except Exception as e:
+            print(f"\n Erro ao gerar Assembly: {e}")
+
+        # ===== ALUNO 4: Exibição e Salvamento =====
         # Exibe resultados
         if resultados:
             exibirResultados(resultados)
 
         # Salva Assembly
         if assembly_completo:
-            salvarAssembly(assembly_completo)
+            salvarAssembly(assembly_completo, "saida.s")
 
         print("Compilação concluída!\n")
 

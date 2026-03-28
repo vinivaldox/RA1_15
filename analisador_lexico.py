@@ -419,7 +419,7 @@ def parseExpressao(linha: str) -> list:
     return contexto["tokens"]
 
 
-def ler_arquivo(nome_arquivo: str) -> list:
+def ler_teste(nome_arquivo: str) -> list:
     """Abre arquivo .txt e retorna lista de linhas não-vazias.
 
     Lê todas as linhas de um arquivo de texto, remove espaços em branco
@@ -463,7 +463,7 @@ def ler_arquivo(nome_arquivo: str) -> list:
 if __name__ == "__main__":
     nome_in = "teste_1.txt"
     nome_out = "token.txt"
-    linhas = ler_arquivo(nome_in)
+    linhas = ler_teste(nome_in)
 
     with open(nome_out, "w", encoding="utf-8") as arquivo_saida:
         for i, linha in enumerate(linhas, 1):
